@@ -62,8 +62,9 @@ class MessagingIntegrationTest extends IntegrationTestBase {
             Integer rows = jdbc.queryForObject(
                     "SELECT COUNT(*) FROM processed_messages WHERE event_id = ?", Integer.class, eventId);
             assertThat(rows).isEqualTo(1);
-            assertThat(rabbit.execute(ch -> ch.queueDeclarePassive(MessagingConfig.ORDER_CREATED_QUEUE)
-                    .getMessageCount())).isZero();
+            Integer queued = rabbit.execute(ch -> ch.queueDeclarePassive(MessagingConfig.ORDER_CREATED_QUEUE)
+                    .getMessageCount());
+            assertThat(queued).isZero();
         });
     }
 
