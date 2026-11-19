@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: shop-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/shop?useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USER:shop}
+    password: ${DB_PASSWORD:shop}
+
+  jpa:
+    hibernate:
+      ddl-auto: none              # schema is owned by Flyway migrations
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+
+  flyway:
+    enabled: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cache:
+    type: redis
+
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
+    publisher-confirm-type: correlated   # broker acks every publish
+    publisher-returns: true
+    template:
+      mandatory: true                     # unroutable messages are returned, not dropped
+    listener:
+      simple:
+        acknowledge-mode: auto
+        default-requeue-rejected: false   # after retries, reject -> dead-letter exchange
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 500ms
+          multiplier: 2.0
+
+app:
+  jwt:
+    # Base64-encoded 256-bit key. Override in any real deployment.
+    secret: ${JWT_SECRET:c2hvcC1kZW1vLXNlY3JldC1rZXktY2hhbmdlLW1lLXBsZWFzZS0yNTYtYml0cw==}
+    ttl: 2h
+  cache:
+    product-ttl: 10m
+  outbox:
+    batch-size: 50
+    poll-interval-ms: 1000
+  admin:
+    email: ${ADMIN_EMAIL:admin@shop.local}
+    password: ${ADMIN_PASSWORD:admin12345}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+    tags:
+      application: ${spring.application.name}
